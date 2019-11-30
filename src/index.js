@@ -823,7 +823,6 @@ class Canvas {
 
   onMouseDown(e) {
     this.down = true;
-    console.log('on down', e);
     this.clearData();
   }
 
@@ -855,22 +854,30 @@ class Canvas {
 }
 
 function writePrediction(prediction) {
-  const result = prediction.map(e => Math.round(e * 100) / 100);
-  const s = `
-    <table>
-      ${result.map((e, i) => `<tr><td>${i}</td><td>${e}</td></tr>`).join('')}
-    </table>
-  `;
-  document.getElementById('table').innerHTML = s;
+  prediction
+    .map(e => Math.round(e * 100) / 100)
+    .forEach(
+      (v, i) => (document.getElementById('prediction' + i).innerHTML = v),
+    );
 }
 
 async function main() {
   const model = await tf.loadLayersModel('/model/model.json', false);
+  writePrediction(await predict(model, arr));
+
+  let id;
   const canvas = new Canvas('canvas', data => {
-    writePrediction(predict(model, data));
+    clearTimeout(id);
+    // debounce for better responsiveness when drawing
+    id = setTimeout(async () => writePrediction(await predict(model, data)));
   });
   canvas.draw(arr);
-  writePrediction(predict(model, arr));
+
+  for (let i = 0; i < 10; i++) {
+    document.getElementById('button' + i).onclick = () => {
+      console.log('button ' + i + '!!!');
+    };
+  }
 }
 
 main();
