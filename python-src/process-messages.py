@@ -18,7 +18,7 @@ with open(filename) as json_file:
 def plot_images(images, labels):
     n = len(images)
     k = math.ceil(math.sqrt(n))
-    plt.figure(figsize=(k*1.5, k*1.5))
+    plt.figure(figsize=(10, 10))
     for i in range(len(images)):
         plt.subplot(k, k, i + 1)
         plt.xticks([])
@@ -26,8 +26,14 @@ def plot_images(images, labels):
         plt.grid(False)
         plt.imshow(images[i], cmap=plt.cm.binary)
         plt.title(labels[i])
+    plt.tight_layout()
     plt.show()
 
+
+# manual corrections
+data[2]["entry"]["user_label"] = 3
+
+data = sorted(data, key=lambda datum: datum["entry"]["user_label"])
 
 images = []
 labels = []
@@ -36,8 +42,5 @@ for datum in data:
     image_data = np.array(entry["image_data"]).reshape((28, 28))
     images.append(image_data)
     labels.append(entry["user_label"])
-
-# manual corrections
-labels[2] = 3
 
 plot_images(images, labels)
