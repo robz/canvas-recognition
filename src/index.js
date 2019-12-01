@@ -18,9 +18,27 @@ class Canvas {
   constructor(id, onChange) {
     this.canvas = document.getElementById('canvas');
     this.onChange = onChange;
+
+    // mouse
     this.canvas.onmousedown = this.onMouseDown.bind(this);
     this.canvas.onmouseup = this.onMouseUp.bind(this);
     this.canvas.onmousemove = this.onMouseMove.bind(this);
+
+    // touch
+    this.canvas.addEventListener('touchstart', this.onMouseDown.bind(this));
+    this.canvas.addEventListener('touchend', this.onMouseUp.bind(this));
+    this.canvas.addEventListener('touchmove', this.onTouchMove.bind(this));
+
+    // Prevent scrolling when touching the canvas
+    const preventDefault = e => {
+      if (e.target == this.canvas) {
+        e.preventDefault();
+      }
+    };
+    document.body.addEventListener('touchstart', preventDefault, {passive: false});
+    document.body.addEventListener('touchend', preventDefault, {passive: false});
+    document.body.addEventListener('touchmove', preventDefault, {passive: false});
+
     this.ctx = this.canvas.getContext('2d');
     this.down = false;
     this.clearData();
@@ -49,12 +67,24 @@ class Canvas {
     this.clearData();
   }
 
+  onTouchMove(e) {
+    if (!this.down) {
+      return;
+    }
+    this.onMove(e.touches[0]);
+  }
+
   onMouseMove(e) {
     if (!this.down) {
       return;
     }
-    const x = e.clientX - this.canvas.offsetLeft;
-    const y = e.clientY - this.canvas.offsetTop;
+    this.onMove(e);
+  }
+
+  onMove(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     const r = Math.round(y / YINC);
     const c = Math.round(x / XINC);
     // TODO: why is this necessary
