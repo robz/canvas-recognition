@@ -149,6 +149,7 @@ async function main() {
         },
       };
       pubnub.publish(publishConfig);
+      disableButtons();
     };
   }
 
