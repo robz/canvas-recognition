@@ -1,3 +1,6 @@
 env
 .watchmanconfig
 node_modules
+src/keys.js
+dist
+recorded-mistakes

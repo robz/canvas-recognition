@@ -1,6 +1,8 @@
 import * as tf from '@tensorflow/tfjs';
 const tfvis = require('@tensorflow/tfjs-vis');
+const PubNub = require('pubnub');
 
+const keys = require('./keys');
 const arr = require('./example');
 
 const NUM_ROWS = 28;
@@ -88,22 +90,65 @@ function writePrediction(prediction) {
     );
 }
 
+let disabled = true;
+
+function enableButtons() {
+  if (!disabled) {
+    return;
+  }
+
+  disabled = false;
+  for (let i = 0; i < NUM_CLASSES; i++) {
+    document.getElementById('button' + i).disabled = false;
+  }
+}
+
+function disableButtons() {
+  if (disabled) {
+    return;
+  }
+
+  disabled = true;
+  for (let i = 0; i < NUM_CLASSES; i++) {
+    document.getElementById('button' + i).disabled = true;
+  }
+}
+
 async function main() {
-  const model = await tf.loadLayersModel('/model/model.json', false);
-  writePrediction(await predict(model, arr));
+  const model = await tf.loadLayersModel(
+    window.location.href + '/model/model.json',
+    false,
+  );
+  let latest_prediction = await predict(model, arr);
+  writePrediction(latest_prediction);
 
   let id;
   const canvas = new Canvas('canvas', data => {
     // cancel pending prediction, since it's stale
     // (debounce for better responsiveness when drawing)
     clearTimeout(id);
-    id = setTimeout(async () => writePrediction(await predict(model, data)));
+    id = setTimeout(async () => {
+      latest_prediction = await predict(model, data);
+      writePrediction(latest_prediction);
+      enableButtons();
+    });
   });
   canvas.draw(arr);
 
+  const pubnub = new PubNub(keys);
+  const uuid = PubNub.generateUUID();
   for (let i = 0; i < NUM_CLASSES; i++) {
     document.getElementById('button' + i).onclick = () => {
-      console.log('button ' + i + '!!!');
+      const publishConfig = {
+        channel: 'digit_prediction_mistakes',
+        message: {
+          uuid,
+          image_data: canvas.data,
+          prediction: latest_prediction,
+          user_label: i,
+        },
+      };
+      pubnub.publish(publishConfig);
     };
   }
 
