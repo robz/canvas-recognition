@@ -30,14 +30,23 @@ class Canvas {
     this.canvas.addEventListener('touchmove', this.onTouchMove.bind(this));
 
     // Prevent scrolling when touching the canvas
+    // http://bencentra.com/code/2014/12/05/html5-canvas-touch-events.html
     const preventDefault = e => {
       if (e.target == this.canvas) {
         e.preventDefault();
       }
     };
-    document.body.addEventListener('touchstart', preventDefault, {passive: false});
-    document.body.addEventListener('touchend', preventDefault, {passive: false});
-    document.body.addEventListener('touchmove', preventDefault, {passive: false});
+    document.body.addEventListener('touchstart', preventDefault, {
+      // issue with chrome
+      // https://github.com/inuyaksa/jquery.nicescroll/issues/799
+      passive: false,
+    });
+    document.body.addEventListener('touchend', preventDefault, {
+      passive: false,
+    });
+    document.body.addEventListener('touchmove', preventDefault, {
+      passive: false,
+    });
 
     this.ctx = this.canvas.getContext('2d');
     this.down = false;
