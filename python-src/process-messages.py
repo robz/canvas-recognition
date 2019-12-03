@@ -30,9 +30,13 @@ def plot_images(images, labels):
     plt.show()
 
 
-# manual corrections
-data[2]["entry"]["user_label"] = 3
+def correct(datum):
+    if datum["timetoken"] == "15751756761692096":
+        datum["entry"]["user_label"] = 3
+    return datum
 
+
+data = [correct(datum) for datum in data]
 data = sorted(data, key=lambda datum: datum["entry"]["user_label"])
 
 images = []
