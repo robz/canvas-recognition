@@ -3,6 +3,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+from scipy import ndimage
 
 if len(sys.argv) is not 2:
     print("usage: python process-messages.py filename")
@@ -36,15 +37,40 @@ def correct(datum):
     return datum
 
 
+#data = [data[0]]
 data = [correct(datum) for datum in data]
 data = sorted(data, key=lambda datum: datum["entry"]["user_label"])
 
 images = []
 labels = []
+
+rot_inc = 20
+angles = range(-40, 40 + rot_inc, rot_inc)
+pos_inc = 2
+
 for datum in data:
     entry = datum["entry"]
-    image_data = np.array(entry["image_data"]).reshape((28, 28))
-    images.append(image_data)
-    labels.append(entry["user_label"])
+    original_image = np.array(entry["image_data"]).reshape((28, 28))
+    user_label = entry["user_label"]
 
-plot_images(images, labels)
+    for angle in angles:
+        image_data = ndimage.rotate(original_image, angle, reshape=False)
+        images.append(image_data)
+        labels.append(user_label)
+
+        rows, cols = np.where(image_data)
+        miny = np.min(rows)
+        maxy = np.max(rows)
+        minx = np.min(cols)
+        maxx = np.max(cols)
+
+        for x in range(-minx, 28 - maxx, pos_inc):
+            for y in range(-miny, 28 - maxy, pos_inc):
+                images.append(np.roll(image_data, (x, y), (1, 0)))
+                labels.append(user_label)
+
+print("number of tweaked training data:", len(images))
+
+#plot_images(images, labels)
+
+np.save(filename + ".npy", {"images": images, "labels": labels})

@@ -155,7 +155,7 @@ function disableButtons() {
 
 async function main() {
   const model = await tf.loadLayersModel(
-    window.location.href + '/model/model.json',
+    window.location.href + '/model-retrained/model.json',
     false,
   );
   let latest_prediction = await predict(model, arr);
